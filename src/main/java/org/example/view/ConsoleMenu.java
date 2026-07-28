@@ -241,7 +241,6 @@ public class ConsoleMenu {
 
     private void printUserMenu() {
         String menu = """
-        
     
         =========================
                 USER MENU
@@ -263,7 +262,6 @@ public class ConsoleMenu {
 
     private void printOrderMenu() {
         String menu = """
-        
     
         =========================
                 ORDER MENU
