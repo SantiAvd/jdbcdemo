@@ -241,12 +241,11 @@ public class ConsoleMenu {
 
     private void printUserMenu() {
         String menu = """
-        
     
         =========================
                 USER MENU
         =========================
-                
+               
         1. Создать пользователя
         2. Создать пользователя с заказом
         3. Удалить пользователя
@@ -255,6 +254,7 @@ public class ConsoleMenu {
         6. Показать пользователей
         7. Обновить пользователя
         0. Выход в главное меню
+        
                  Введите пункт:
         """;
         System.out.println(menu);
@@ -262,7 +262,6 @@ public class ConsoleMenu {
 
     private void printOrderMenu() {
         String menu = """
-        
     
         =========================
                 ORDER MENU
