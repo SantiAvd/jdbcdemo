@@ -1,5 +1,6 @@
 package org.example.repository;
 
+import org.example.Mapping.MappingSQL;
 import org.example.model.Order;
 import org.example.model.UserOrderInfo;
 
@@ -8,8 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrderRepository {
-
-    private final String connectionUrl;
 
     private static final String CREATE_TABLE_ORDERS = """
             CREATE TABLE IF NOT EXISTS orders (
@@ -26,16 +25,18 @@ public class OrderRepository {
             """;
 
     private static final String FIND_ORDER_BY_ID_SQL = """
-            SELECT * FROM orders
+            SELECT product, price, user_Id 
+            FROM orders
             WHERE id = ?
             """;
 
     private static final String FIND_ORDERS_BY_USER_ID_SQL = """
-            SELECT * FROM orders
+            SELECT id, product, price
+            FROM orders
             WHERE user_id = ?
             """;
     private static final String FIND_ALL_ORDER_SQL = """
-            SELECT * 
+            SELECT id, product, price, user_Id
             FROM orders
             """;
 
@@ -56,10 +57,8 @@ public class OrderRepository {
             ON u.id = o.user_id
             """;
 
-    public OrderRepository(String connectionUrl) {
-        this.connectionUrl = connectionUrl;
-    }
-
+    public OrderRepository() {}
+    private final MappingSQL mapRow = new MappingSQL();
 
     public void createOrdersTable(Connection connection) throws SQLException {
         try(
@@ -69,10 +68,8 @@ public class OrderRepository {
         }
     }
 
-
-    public void save(Order order) throws SQLException {
+    public void save(Connection connection, Order order) throws SQLException {
         try (
-                Connection connection = DriverManager.getConnection(connectionUrl);
                 PreparedStatement psSave = connection.prepareStatement(SAVE_ORDER_SQL, Statement.RETURN_GENERATED_KEYS);
                 ){
             saveHelper(order, psSave);
@@ -110,7 +107,7 @@ public class OrderRepository {
         }
     }
 
-    public void save(Connection connection, Order order) throws SQLException {
+    public void saveWithUser(Connection connection, Order order) throws SQLException {
         try (
                 PreparedStatement psSave = connection.prepareStatement(SAVE_ORDER_SQL, Statement.RETURN_GENERATED_KEYS);
         ){
@@ -118,39 +115,36 @@ public class OrderRepository {
         }
     }
 
-    public Order findById(int id) throws SQLException {
+    public boolean findById(Connection connection, int id) throws SQLException {
         try(
-                Connection connection = DriverManager.getConnection(connectionUrl);
                 PreparedStatement psFindById = connection.prepareStatement(FIND_ORDER_BY_ID_SQL);
                 ) {
             psFindById.setInt(1, id);
             try (ResultSet resultSet = psFindById.executeQuery()){
                 if (!resultSet.next())
-                    return null;
-                return mapRow(resultSet);
+                    return false;
+                return true;
             }
         }
     }
 
-    public List<Order> findOrdersByUserId(int id) throws SQLException {
+    public List<Order> findOrdersByUserId(Connection connection, int id) throws SQLException {
         List<Order> orders = new ArrayList<>();
 
         try (
-                Connection connection = DriverManager.getConnection(connectionUrl);
                 PreparedStatement psFindUserById = connection.prepareStatement(FIND_ORDERS_BY_USER_ID_SQL);
                 ){
             psFindUserById.setInt(1, id);
             try(ResultSet resultSet = psFindUserById.executeQuery()) {
                 while (resultSet.next())
-                    orders.add(mapRow(resultSet));
+                    orders.add(mapRow.mapRowOrders(resultSet));
             }
         }
         return orders;
     }
 
-    public void update(Order order) throws SQLException {
+    public void update(Connection connection,Order order) throws SQLException {
         try(
-                Connection connection = DriverManager.getConnection(connectionUrl);
                 PreparedStatement psUpdate = connection.prepareStatement(UPDATE_ORDER_SQL);
         ) {
             psUpdate.setString(1, order.getProduct());
@@ -161,38 +155,35 @@ public class OrderRepository {
         }
     }
 
-    public List<Order> findAll() throws SQLException {
+    public List<Order> findAll(Connection connection) throws SQLException {
         List<Order> orders = new ArrayList<>();
         try(
-                Connection connection = DriverManager.getConnection(connectionUrl);
                 PreparedStatement psShowAll = connection.prepareStatement(FIND_ALL_ORDER_SQL);
                 ) {
             try (ResultSet resultSet = psShowAll.executeQuery()) {
                 while (resultSet.next())
-                    orders.add(mapRow(resultSet));
+                    orders.add(mapRow.mapRowOrders(resultSet));
             }
         }
         return orders;
     }
-    public List<UserOrderInfo> showUsersOrder() throws SQLException {
+    public List<UserOrderInfo> showUsersOrder(Connection connection) throws SQLException {
         List<UserOrderInfo> userOrderList = new ArrayList<>();
 
         try(
-                Connection connection = DriverManager.getConnection(connectionUrl);
                 PreparedStatement psUsersOrder = connection.prepareStatement(SELECT_JOIN_USERS_ORDER)
         ){
             try (ResultSet resultSet = psUsersOrder.executeQuery()){
                 while (resultSet.next()) {
-                    userOrderList.add(mapRowUserOrders(resultSet));
+                    userOrderList.add(mapRow.mapRowUserOrders(resultSet));
                 }
             }
         }
         return userOrderList;
     }
 
-    public boolean deleteOrderBy(int id) throws SQLException {
+    public boolean deleteOrderBy(Connection connection, int id) throws SQLException {
         try(
-                Connection connection = DriverManager.getConnection(connectionUrl);
                 PreparedStatement psDelete = connection.prepareStatement(DELETE_ORDER_BY_ID_SQL);
                 ) {
             psDelete.setInt(1, id);
@@ -200,20 +191,5 @@ public class OrderRepository {
             int rows = psDelete.executeUpdate();
             return  rows == 1;
         }
-    }
-
-    private Order mapRow(ResultSet rs) throws SQLException {
-        String product = rs.getString("product");
-        double price = rs.getDouble("price");
-        int id = rs.getInt("id");
-        int userId = rs.getInt("user_Id");
-        return new Order(id, product, price, userId);
-    }
-
-    private UserOrderInfo mapRowUserOrders(ResultSet rs) throws SQLException {
-        String product = rs.getString("product");
-        double price = rs.getDouble("price");
-        String name = rs.getString("name");
-        return new UserOrderInfo(name, product, price);
     }
 }

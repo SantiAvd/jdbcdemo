@@ -27,11 +27,15 @@ public class ShopService {
     }
 
     public void deleteOrderById(int id) throws SQLException {
-        orderRepository.deleteOrderBy(id);
+        try(Connection connection = DriverManager.getConnection(connectionUrl)) {
+            orderRepository.deleteOrderBy(connection, id);
+        }
     }
 
     public void deletUserById(int id) throws SQLException {
-        userRepository.deleteById(id);
+        try(Connection connection = DriverManager.getConnection(connectionUrl)) {
+            userRepository.deleteById(connection, id);
+        }
     }
 
     public void createOrdersBatch(List<Order> orders) throws SQLException {
@@ -51,9 +55,9 @@ public class ShopService {
         try(Connection connection = DriverManager.getConnection(connectionUrl)) {
             connection.setAutoCommit(false);
             try {
-                userRepository.save(connection, user);
+                userRepository.saveWithOrder(connection, user);
                 order.setUserId(user.getId());
-                orderRepository.save(connection, order);
+                orderRepository.saveWithUser(connection, order);
                 connection.commit();
             } catch (SQLException e) {
                 connection.rollback();
@@ -62,38 +66,64 @@ public class ShopService {
         }
     }
 
-    public void updateUser(User user) throws SQLException {
-        userRepository.update(user);
+    public boolean chekUserId(int id) throws SQLException {
+        try (Connection connection = DriverManager.getConnection(connectionUrl)){
+            return userRepository.findId(connection, id);
+        }
+    }
+
+    public boolean chekOrderId(int id) throws SQLException {
+        try (Connection connection = DriverManager.getConnection(connectionUrl)){
+            return orderRepository.findById(connection, id);
+        }
+    }
+
+    public boolean updateUser(User user) throws SQLException {
+        try (Connection connection = DriverManager.getConnection(connectionUrl)) {
+            return userRepository.update(connection, user);
+        }
     }
 
     public void updateOrder(Order order) throws SQLException {
-        orderRepository.update(order);
+        try (Connection connection = DriverManager.getConnection(connectionUrl)) {
+            orderRepository.update(connection, order);
+        }
     }
 
     public List<User> showAllUsers() throws SQLException {
-        return userRepository.findAll();
+        try (Connection connection = DriverManager.getConnection(connectionUrl)) {
+            return userRepository.findAll(connection);
+        }
     }
 
     public List<Order> showAllOrders() throws SQLException {
-        return orderRepository.findAll();
+        try(Connection connection = DriverManager.getConnection(connectionUrl)) {
+            return orderRepository.findAll(connection);
+        }
     }
 
     public List<UserOrderInfo> showAllUsersOrder() throws SQLException {
-        return orderRepository.showUsersOrder();
+        try(Connection connection = DriverManager.getConnection(connectionUrl)) {
+            return orderRepository.showUsersOrder(connection);
+        }
     }
 
     public List<Order> showOrdersByUserId(int id) throws SQLException {
-        return orderRepository.findOrdersByUserId(id);
+        try(Connection connection = DriverManager.getConnection(connectionUrl)) {
+            return orderRepository.findOrdersByUserId(connection,id);
+        }
     }
 
     public void createUser(User user) throws SQLException {
-        userRepository.save(user);
+        try(Connection connection = DriverManager.getConnection(connectionUrl)) {
+            userRepository.save(connection, user);
+        }
     }
 
     public void createOrder(Order order) throws SQLException {
-        orderRepository.save(order);
+        try(Connection connection = DriverManager.getConnection(connectionUrl)) {
+            orderRepository.save(connection, order);
+        }
+
     }
-
-
-
 }

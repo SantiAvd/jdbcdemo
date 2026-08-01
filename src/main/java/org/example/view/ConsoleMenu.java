@@ -2,7 +2,6 @@ package org.example.view;
 
 import org.example.model.Order;
 import org.example.model.User;
-import org.example.model.ValidationEnum;
 import org.example.service.ShopService;
 
 import java.sql.SQLException;
@@ -71,13 +70,20 @@ public class ConsoleMenu {
         return new User(name,email,Integer.parseInt(age));
      }
 
-    private User createUserWithId() {
+    private User updateUserWithId() throws SQLException {
         String name;
         String email;
         String age;
         String id;
 
         id = askValidInput("Введите id пользователя которому хотите внести изменения\n", ValidationEnum.DIGIT);
+         if (!service.chekUserId(Integer.parseInt(id))) {
+             boolean isValidId = false;
+             do {
+                 id = askValidInput("Gользователя под таким ID не существует попробуйте снова", ValidationEnum.DIGIT);
+                 isValidId = service.chekUserId(Integer.parseInt(id));
+             } while (!isValidId);
+         }
         name = askValidInput("Введите новое имя пользователя\n", ValidationEnum.LINE);
         age = askValidInput("Введите новый возраст пользователя\n", ValidationEnum.DIGIT);
         email = askValidInput("Введите новую почту пользователя\n", ValidationEnum.EMAIL);
@@ -95,12 +101,19 @@ public class ConsoleMenu {
         return new Order(product,Double.parseDouble(price), null);
     }
 
-    private Order createOrderWithId() {
+    private Order createOrderWithId() throws SQLException {
         String product;
         String price;
         String id;
 
         id = askValidInput("Введите id заказа которому хотите внести изменения\n", ValidationEnum.DIGIT);
+        if (!service.chekOrderId(Integer.parseInt(id))) {
+            boolean isValidId = false;
+            do {
+                id = askValidInput("Заказа под таким ID не существует попробуйте снова", ValidationEnum.DIGIT);
+                isValidId = service.chekOrderId(Integer.parseInt(id));
+            } while (!isValidId);
+        }
         product = askValidInput("Введите новое название продукта\n", ValidationEnum.PRODUCT_NAME);
         price = askValidInput("Введите новую цену продукта\n", ValidationEnum.DIGITWITHTOGLE);
 
@@ -212,7 +225,7 @@ public class ConsoleMenu {
                     case 6: printer.printUsers(service.showAllUsers()); break;
                     case 7:
                         printer.printUsers(service.showAllUsers());
-                        service.updateUser(createUserWithId());
+                        service.updateUser(updateUserWithId());
                     case 0: stop = true; break;
                     default: break;
                 }
@@ -242,6 +255,7 @@ public class ConsoleMenu {
     private void printUserMenu() {
         String menu = """
     
+    
         =========================
                 USER MENU
         =========================
@@ -262,6 +276,7 @@ public class ConsoleMenu {
 
     private void printOrderMenu() {
         String menu = """
+    
     
         =========================
                 ORDER MENU

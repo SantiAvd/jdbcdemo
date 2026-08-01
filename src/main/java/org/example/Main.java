@@ -11,8 +11,8 @@ public class Main {
     private static final String CONNECTION_URL = "jdbc:h2:./database";
 
     public static void main(String[] args) throws SQLException {
-        UserRepository userRepository = new UserRepository(CONNECTION_URL);
-        OrderRepository orderRepository = new OrderRepository(CONNECTION_URL);
+        UserRepository userRepository = new UserRepository();
+        OrderRepository orderRepository = new OrderRepository();
         ShopService service = new ShopService(CONNECTION_URL, userRepository, orderRepository);
         ConsolePrinter printer = new ConsolePrinter();
         ConsoleMenu menu = new ConsoleMenu(service, printer);
