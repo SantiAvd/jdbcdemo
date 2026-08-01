@@ -38,6 +38,7 @@ build/
 ### Mac OS ###
 .DS_Store
 
-##DB##
-.mv.db
-.trace.db
+target/
+database.mv.db
+database.trace.db
+*.trace.db
